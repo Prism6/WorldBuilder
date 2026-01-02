@@ -5,7 +5,7 @@ Service layer for project management business logic.
 from typing import Dict, Optional
 from models.project import Project
 from repositories.project_repository import ProjectRepository
-from exceptions import ProjectNotFoundException, ProjectValidationError
+from exceptions import ProjectNotFoundException
 from utils.logger import get_logger
 from constants import (
     DEFAULT_PROJECT_NAME,

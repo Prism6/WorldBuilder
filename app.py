@@ -13,6 +13,8 @@ from exceptions import (
 )
 from constants import DEFAULT_STORAGE_DIR
 from utils.logger import get_logger
+from components.sidebar import render_sidebar
+from components.dashboard import render_dashboard
 
 logger = get_logger(__name__)
 
@@ -101,90 +103,49 @@ st.set_page_config(
 
 # --- Session State Initialization ---
 if 'current_project' not in st.session_state:
-    create_new_project() # Start with a new project
+    create_new_project()
 
 if 'project_saved' not in st.session_state:
-    st.session_state.project_saved = True # Assume new project is unsaved
+    st.session_state.project_saved = True
+
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = 'dashboard'
 
 # --- Sidebar ---
-with st.sidebar:
-    st.title("WorldBuilder 메뉴")
-    st.markdown("---")
+available_projects = get_available_projects()
+new_page = render_sidebar(
+    on_new_project=create_new_project,
+    on_load_project=load_project,
+    on_save_project=save_project,
+    available_projects=available_projects,
+    is_project_saved=st.session_state.project_saved,
+    current_page=st.session_state.current_page
+)
 
-    st.header("프로젝트 관리")
-    if st.button("새 프로젝트", help="새로운 월드 빌딩 프로젝트를 시작합니다."):
-        if not st.session_state.project_saved:
-            st.warning("현재 프로젝트가 저장되지 않았습니다. 계속 진행하면 변경 사항이 손실될 수 있습니다.")
-            if st.button("강제로 새 프로젝트 생성"):
-                create_new_project()
-        else:
-            create_new_project()
-
-    available_projects = get_available_projects()
-    if available_projects:
-        project_names = list(available_projects.values())
-        selected_project_name = st.selectbox("프로젝트 로드", project_names, help="기존 프로젝트를 선택하여 로드합니다.")
-        
-        # Get the ID of the selected project
-        selected_project_id = next((pid for pid, name in available_projects.items() if name == selected_project_name), None)
-
-        if selected_project_id and st.button("로드", help=f"'{selected_project_name}' 프로젝트를 로드합니다."):
-            if not st.session_state.project_saved:
-                st.warning("현재 프로젝트가 저장되지 않았습니다. 계속 진행하면 변경 사항이 손실될 수 있습니다.")
-                if st.button("강제로 프로젝트 로드"):
-                    load_project(selected_project_id)
-            else:
-                load_project(selected_project_id)
-    else:
-        st.info("저장된 프로젝트가 없습니다.")
-
-    if st.button("프로젝트 저장", help="현재 프로젝트를 파일로 저장합니다."):
-        save_project()
-    
-    st.markdown("---")
-    st.write("사이드바 내용 (향후 컴포넌트)")
+if new_page:
+    st.session_state.current_page = new_page
+    st.rerun()
 
 # --- Main Content Area ---
-st.title(f"WorldBuilder: {st.session_state.current_project.project_name}")
+project = st.session_state.current_project
 
+# Unsaved changes warning
 if not st.session_state.project_saved:
     st.warning("⚠️ 저장되지 않은 변경 사항이 있습니다.")
 
-# Project details expander
-with st.expander("프로젝트 정보"):
-    project = st.session_state.current_project
-    st.write(f"**프로젝트 ID:** `{project.project_id}`")
-
-    new_project_name = st.text_input("프로젝트 이름", value=project.project_name, key="project_name_input")
-    new_genre = st.text_input("장르", value=project.genre, key="project_genre_input")
-
-    # Check if metadata has changed
-    if new_project_name != project.project_name or new_genre != project.genre:
-        try:
-            project_manager.update_project_metadata(
-                project,
-                project_name=new_project_name if new_project_name != project.project_name else None,
-                genre=new_genre if new_genre != project.genre else None
-            )
-            st.session_state.project_saved = False
-        except ProjectValidationError as e:
-            st.error(f"유효성 검증 실패: {str(e)}")
-
-    st.write(f"**생성일:** {project.created_at}")
-    st.write(f"**수정일:** {project.updated_at}")
-
-    # Update and display completion rate
-    completion_rate = project_manager.get_project_completion_rate(project)
-    st.progress(completion_rate, text=f"완성도: {completion_rate*100:.0f}%")
-
-st.write("월드 빌딩 작업을 시작하세요!")
-
-# Placeholder for main content components
-st.subheader("프로젝트 개요 (향후 대시보드)")
-st.write("여기에 프로젝트 대시보드가 표시됩니다.")
-
-st.subheader("12요소 상세 설정 (향후)")
-st.write("여기에 12요소별 상세 설정 UI가 표시됩니다.")
-
-st.subheader("기타 기능 (향후)")
-st.write("여기에 다른 기능들이 표시됩니다.")
+# Render current page
+if st.session_state.current_page == 'dashboard':
+    render_dashboard(
+        project=project,
+        on_edit_concept=lambda: st.info("컨셉 편집 기능은 곧 추가될 예정입니다."),
+        on_goto_elements=lambda: st.session_state.update({'current_page': 'elements'})
+    )
+elif st.session_state.current_page == 'elements':
+    st.title("🌍 12요소 편집")
+    st.info("12요소 편집 페이지는 곧 구현될 예정입니다.")
+elif st.session_state.current_page == 'connections':
+    st.title("🔗 연결 관계")
+    st.info("연결 관계 페이지는 곧 구현될 예정입니다.")
+elif st.session_state.current_page == 'export':
+    st.title("📤 내보내기")
+    st.info("내보내기 페이지는 곧 구현될 예정입니다.")

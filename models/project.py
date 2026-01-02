@@ -28,6 +28,7 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 # 각 12요소에 대한 데이터 구조
 @dataclass
 class Element:
@@ -36,12 +37,14 @@ class Element:
     # 예: space 요소의 landmarks
     # landmarks: List[str] = field(default_factory=list)
 
+
 # 9. 규칙
 @dataclass
 class Rules:
     natural: List[str] = field(default_factory=list)
     social: List[str] = field(default_factory=list)
     religious: List[str] = field(default_factory=list)
+
 
 # 프로젝트의 모든 요소를 담는 컨테이너
 @dataclass
@@ -54,16 +57,18 @@ class WorldElements:
     language: Element = field(default_factory=Element)
     mythology: Element = field(default_factory=Element)
     philosophy: Element = field(default_factory=Element)
-    rules: Rules = field(default_factory=Rules) # Rules는 별도 dataclass
+    rules: Rules = field(default_factory=Rules)  # Rules는 별도 dataclass
     economy: Element = field(default_factory=Element)
     politics: Element = field(default_factory=Element)
     energy: Element = field(default_factory=Element)
+
 
 # 세계관 컨셉
 @dataclass
 class Concept:
     logline: str = ""
     keywords: List[str] = field(default_factory=list)
+
 
 # 메인 프로젝트 데이터 클래스
 @dataclass
@@ -217,8 +222,8 @@ class Project:
 
         # Check rules separately
         if (self.elements.rules.natural or
-            self.elements.rules.social or
-            self.elements.rules.religious):
+                self.elements.rules.social or
+                self.elements.rules.religious):
             filled_count += 1
 
         return filled_count
@@ -273,7 +278,7 @@ class Project:
             elements_data = data.get("elements", {})
 
             # Load each element dynamically
-            element_kwargs = {}
+            element_kwargs: Dict[str, Any] = {}
             for element_name in ELEMENT_NAMES:
                 element_kwargs[element_name] = Element(**elements_data.get(element_name, {}))
 
