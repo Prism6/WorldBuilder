@@ -2,6 +2,7 @@
 WorldBuilder main application entry point.
 """
 
+from typing import Optional
 import streamlit as st
 from repositories.json_project_repository import JsonProjectRepository
 from services.project_manager import ProjectManager
@@ -16,6 +17,7 @@ from utils.logger import get_logger
 from components.sidebar import render_sidebar
 from components.dashboard import render_dashboard
 from components.element_form import render_element_form
+from components.concept_form import render_concept_form
 
 logger = get_logger(__name__)
 
@@ -140,6 +142,63 @@ def update_rules(natural: list[str], social: list[str], religious: list[str]) ->
         st.error(error_msg)
         logger.error(error_msg)
 
+def update_concept_metadata(project_name: Optional[str], genre: Optional[str]) -> None:
+    """
+    Update project metadata (name and genre) and mark project as unsaved.
+
+    Args:
+        project_name: New project name
+        genre: New genre
+    """
+    try:
+        logger.debug("Updating project metadata from UI")
+        project = st.session_state.current_project
+        project_manager.update_project_metadata(project, project_name, genre)
+        st.session_state.project_saved = False
+        logger.info(f"Project metadata updated: name={project_name}, genre={genre}")
+    except ProjectValidationError as e:
+        error_msg = f"메타데이터 업데이트 실패: {str(e)}"
+        st.error(error_msg)
+        logger.error(error_msg)
+
+def update_concept_logline(logline: str) -> None:
+    """
+    Update project logline and mark project as unsaved.
+
+    Args:
+        logline: New logline
+    """
+    try:
+        logger.debug("Updating project logline from UI")
+        project = st.session_state.current_project
+        project.concept.logline = logline
+        project._update_timestamp()
+        st.session_state.project_saved = False
+        logger.info("Project logline updated")
+    except Exception as e:
+        error_msg = f"로그라인 업데이트 실패: {str(e)}"
+        st.error(error_msg)
+        logger.error(error_msg)
+
+def update_concept_keywords(keywords: list[str]) -> None:
+    """
+    Update project keywords and mark project as unsaved.
+
+    Args:
+        keywords: New keywords list
+    """
+    try:
+        logger.debug("Updating project keywords from UI")
+        project = st.session_state.current_project
+        project.concept.keywords = keywords
+        project._update_timestamp()
+        st.session_state.project_saved = False
+        logger.info(f"Project keywords updated: {len(keywords)} keywords")
+    except Exception as e:
+        error_msg = f"키워드 업데이트 실패: {str(e)}"
+        st.error(error_msg)
+        logger.error(error_msg)
+
 # --- Streamlit Page Configuration ---
 st.set_page_config(
     page_title="WorldBuilder",
@@ -182,9 +241,22 @@ if not st.session_state.project_saved:
 if st.session_state.current_page == 'dashboard':
     render_dashboard(
         project=project,
-        on_edit_concept=lambda: st.info("컨셉 편집 기능은 곧 추가될 예정입니다."),
+        on_edit_concept=lambda: st.session_state.update({'current_page': 'concept'}),
         on_goto_elements=lambda: st.session_state.update({'current_page': 'elements'})
     )
+elif st.session_state.current_page == 'concept':
+    # 컨셉 편집 페이지
+    render_concept_form(
+        project=project,
+        on_update_metadata=update_concept_metadata,
+        on_update_logline=update_concept_logline,
+        on_update_keywords=update_concept_keywords
+    )
+    # 대시보드로 돌아가기 버튼
+    st.markdown("---")
+    if st.button("⬅️ 대시보드로 돌아가기", use_container_width=True):
+        st.session_state.current_page = 'dashboard'
+        st.rerun()
 elif st.session_state.current_page == 'elements':
     render_element_form(
         project=project,
