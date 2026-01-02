@@ -18,6 +18,7 @@ from components.sidebar import render_sidebar
 from components.dashboard import render_dashboard
 from components.element_form import render_element_form
 from components.concept_form import render_concept_form
+from components.export import render_export_page
 
 logger = get_logger(__name__)
 
@@ -267,5 +268,4 @@ elif st.session_state.current_page == 'connections':
     st.title("🔗 연결 관계")
     st.info("연결 관계 페이지는 곧 구현될 예정입니다.")
 elif st.session_state.current_page == 'export':
-    st.title("📤 내보내기")
-    st.info("내보내기 페이지는 곧 구현될 예정입니다.")
+    render_export_page(project=project)
