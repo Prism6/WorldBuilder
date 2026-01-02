@@ -15,6 +15,7 @@ from constants import DEFAULT_STORAGE_DIR
 from utils.logger import get_logger
 from components.sidebar import render_sidebar
 from components.dashboard import render_dashboard
+from components.element_form import render_element_form
 
 logger = get_logger(__name__)
 
@@ -95,6 +96,50 @@ def get_available_projects() -> dict[str, str]:
     logger.debug("Getting available projects from UI")
     return project_manager.list_all_projects()
 
+def update_element(element_name: str, description: str) -> None:
+    """
+    Update a world element and mark project as unsaved.
+
+    Args:
+        element_name: Name of the element to update
+        description: New description for the element
+    """
+    try:
+        logger.debug(f"Updating element '{element_name}' from UI")
+        project = st.session_state.current_project
+        project.update_element(element_name, description)
+        project.update_completion_rate()
+        st.session_state.project_saved = False
+        logger.info(f"Element '{element_name}' updated successfully")
+    except ProjectValidationError as e:
+        error_msg = f"요소 업데이트 실패: {str(e)}"
+        st.error(error_msg)
+        logger.error(error_msg)
+
+def update_rules(natural: list[str], social: list[str], religious: list[str]) -> None:
+    """
+    Update the rules element and mark project as unsaved.
+
+    Args:
+        natural: List of natural rules
+        social: List of social rules
+        religious: List of religious rules
+    """
+    try:
+        logger.debug("Updating rules element from UI")
+        project = st.session_state.current_project
+        project.elements.rules.natural = natural
+        project.elements.rules.social = social
+        project.elements.rules.religious = religious
+        project.update_completion_rate()
+        project._update_timestamp()
+        st.session_state.project_saved = False
+        logger.info("Rules element updated successfully")
+    except Exception as e:
+        error_msg = f"규칙 업데이트 실패: {str(e)}"
+        st.error(error_msg)
+        logger.error(error_msg)
+
 # --- Streamlit Page Configuration ---
 st.set_page_config(
     page_title="WorldBuilder",
@@ -141,8 +186,11 @@ if st.session_state.current_page == 'dashboard':
         on_goto_elements=lambda: st.session_state.update({'current_page': 'elements'})
     )
 elif st.session_state.current_page == 'elements':
-    st.title("🌍 12요소 편집")
-    st.info("12요소 편집 페이지는 곧 구현될 예정입니다.")
+    render_element_form(
+        project=project,
+        on_update_element=update_element,
+        on_update_rules=update_rules
+    )
 elif st.session_state.current_page == 'connections':
     st.title("🔗 연결 관계")
     st.info("연결 관계 페이지는 곧 구현될 예정입니다.")
