@@ -19,6 +19,7 @@ from components.dashboard import render_dashboard
 from components.element_form import render_element_form
 from components.concept_form import render_concept_form
 from components.export import render_export_page
+from components.connections import render_connections_page
 
 logger = get_logger(__name__)
 
@@ -200,6 +201,51 @@ def update_concept_keywords(keywords: list[str]) -> None:
         st.error(error_msg)
         logger.error(error_msg)
 
+
+def add_connection(connection: dict) -> None:
+    """
+    Add a new connection between elements and mark project as unsaved.
+
+    Args:
+        connection: Connection dictionary with from_element, to_element, connection_type, description
+    """
+    try:
+        logger.debug(f"Adding connection: {connection.get('from_element')} -> {connection.get('to_element')}")
+        project = st.session_state.current_project
+        project.connections.append(connection)
+        project._update_timestamp()
+        st.session_state.project_saved = False
+        logger.info(f"Connection added successfully. Total connections: {len(project.connections)}")
+    except Exception as e:
+        error_msg = f"연결 추가 실패: {str(e)}"
+        st.error(error_msg)
+        logger.error(error_msg)
+
+
+def delete_connection(index: int) -> None:
+    """
+    Delete a connection by index and mark project as unsaved.
+
+    Args:
+        index: Index of connection to delete
+    """
+    try:
+        logger.debug(f"Deleting connection at index {index}")
+        project = st.session_state.current_project
+        if 0 <= index < len(project.connections):
+            deleted = project.connections.pop(index)
+            project._update_timestamp()
+            st.session_state.project_saved = False
+            logger.info(f"Connection deleted successfully. Remaining connections: {len(project.connections)}")
+        else:
+            error_msg = f"잘못된 연결 인덱스: {index}"
+            st.error(error_msg)
+            logger.error(error_msg)
+    except Exception as e:
+        error_msg = f"연결 삭제 실패: {str(e)}"
+        st.error(error_msg)
+        logger.error(error_msg)
+
 # --- Streamlit Page Configuration ---
 st.set_page_config(
     page_title="WorldBuilder",
@@ -243,7 +289,8 @@ if st.session_state.current_page == 'dashboard':
     render_dashboard(
         project=project,
         on_edit_concept=lambda: st.session_state.update({'current_page': 'concept'}),
-        on_goto_elements=lambda: st.session_state.update({'current_page': 'elements'})
+        on_goto_elements=lambda: st.session_state.update({'current_page': 'elements'}),
+        on_goto_connections=lambda: st.session_state.update({'current_page': 'connections'})
     )
 elif st.session_state.current_page == 'concept':
     # 컨셉 편집 페이지
@@ -265,7 +312,10 @@ elif st.session_state.current_page == 'elements':
         on_update_rules=update_rules
     )
 elif st.session_state.current_page == 'connections':
-    st.title("🔗 연결 관계")
-    st.info("연결 관계 페이지는 곧 구현될 예정입니다.")
+    render_connections_page(
+        project=project,
+        on_add_connection=add_connection,
+        on_delete_connection=delete_connection
+    )
 elif st.session_state.current_page == 'export':
     render_export_page(project=project)

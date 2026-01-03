@@ -142,7 +142,8 @@ def render_concept_overview(project: Project) -> None:
 def render_quick_actions(
     project: Project,
     on_edit_concept: Callable[[], None],
-    on_goto_elements: Callable[[], None]
+    on_goto_elements: Callable[[], None],
+    on_goto_connections: Callable[[], None]
 ) -> None:
     """
     Render quick action buttons.
@@ -151,6 +152,7 @@ def render_quick_actions(
         project: The current project
         on_edit_concept: Callback for editing concept
         on_goto_elements: Callback for navigating to elements page
+        on_goto_connections: Callback for navigating to connections page
     """
     st.subheader("🚀 빠른 작업")
 
@@ -165,13 +167,15 @@ def render_quick_actions(
             on_goto_elements()
 
     with col3:
-        st.button("🔗 연결 추가", use_container_width=True, disabled=True)
+        if st.button("🔗 연결 추가", use_container_width=True):
+            on_goto_connections()
 
 
 def render_dashboard(
     project: Project,
     on_edit_concept: Callable[[], None],
-    on_goto_elements: Callable[[], None]
+    on_goto_elements: Callable[[], None],
+    on_goto_connections: Callable[[], None]
 ) -> None:
     """
     Render complete dashboard page.
@@ -180,6 +184,7 @@ def render_dashboard(
         project: The current project
         on_edit_concept: Callback for editing concept
         on_goto_elements: Callback for navigating to elements page
+        on_goto_connections: Callback for navigating to connections page
     """
     logger.debug(f"Rendering dashboard for project: {project.project_id}")
 
@@ -204,4 +209,4 @@ def render_dashboard(
     st.markdown("---")
 
     # Quick Actions
-    render_quick_actions(project, on_edit_concept, on_goto_elements)
+    render_quick_actions(project, on_edit_concept, on_goto_elements, on_goto_connections)
