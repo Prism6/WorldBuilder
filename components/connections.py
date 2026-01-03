@@ -5,6 +5,8 @@ between world elements.
 """
 
 import streamlit as st
+import plotly.graph_objects as go
+import math
 from typing import Callable, Dict, Any, List
 from models.project import Project
 
@@ -34,6 +36,175 @@ CONNECTION_TYPES = {
     'causes': '⚡ 원인이 된다',
     'enables': '🔓 가능하게 한다'
 }
+
+# 연결 타입별 색상
+CONNECTION_COLORS = {
+    'influences': '#3B82F6',      # Blue
+    'depends_on': '#8B5CF6',      # Purple
+    'conflicts': '#EF4444',       # Red
+    'harmonizes': '#10B981',      # Green
+    'causes': '#F59E0B',          # Amber
+    'enables': '#EC4899'          # Pink
+}
+
+
+def create_network_graph(connections: List[Dict[str, Any]]) -> go.Figure:
+    """
+    Create an interactive network graph visualization of connections.
+
+    Args:
+        connections: List of connection dictionaries
+
+    Returns:
+        Plotly figure object
+    """
+    # Get list of elements
+    elements = list(ELEMENT_LABELS.keys())
+    n_elements = len(elements)
+
+    # Calculate circular positions for nodes
+    node_x = []
+    node_y = []
+    node_text = []
+
+    radius = 1.0
+    for i, element in enumerate(elements):
+        angle = 2 * math.pi * i / n_elements - math.pi / 2  # Start at top
+        x = radius * math.cos(angle)
+        y = radius * math.sin(angle)
+        node_x.append(x)
+        node_y.append(y)
+        node_text.append(ELEMENT_LABELS[element])
+
+    # Create node positions dict for easy lookup
+    node_pos = {element: (node_x[i], node_y[i]) for i, element in enumerate(elements)}
+
+    # Create edge traces (one trace per connection type for coloring)
+    edge_traces = []
+
+    for conn_type, color in CONNECTION_COLORS.items():
+        # Filter connections of this type
+        type_connections = [c for c in connections if c.get('connection_type') == conn_type]
+
+        if not type_connections:
+            continue
+
+        edge_x = []
+        edge_y = []
+        edge_text = []
+
+        for conn in type_connections:
+            from_elem = conn.get('from_element', '')
+            to_elem = conn.get('to_element', '')
+
+            if from_elem not in node_pos or to_elem not in node_pos:
+                continue
+
+            x0, y0 = node_pos[from_elem]
+            x1, y1 = node_pos[to_elem]
+
+            # Add edge line
+            edge_x.extend([x0, x1, None])
+            edge_y.extend([y0, y1, None])
+
+            # Prepare hover text
+            desc = conn.get('description', '설명 없음')
+            hover = f"{ELEMENT_LABELS[from_elem]} → {ELEMENT_LABELS[to_elem]}<br>{desc}"
+            edge_text.append(hover)
+
+        # Create edge trace
+        edge_trace = go.Scatter(
+            x=edge_x,
+            y=edge_y,
+            mode='lines',
+            line=dict(width=2, color=color),
+            hoverinfo='text',
+            text=edge_text,
+            name=CONNECTION_TYPES[conn_type],
+            showlegend=True
+        )
+        edge_traces.append(edge_trace)
+
+    # Create node trace
+    node_trace = go.Scatter(
+        x=node_x,
+        y=node_y,
+        mode='markers+text',
+        hoverinfo='text',
+        text=node_text,
+        textposition="middle center",
+        textfont=dict(size=10, color='white'),
+        marker=dict(
+            size=50,
+            color='#1E293B',
+            line=dict(width=2, color='#475569')
+        ),
+        showlegend=False,
+        hovertext=node_text
+    )
+
+    # Create figure
+    fig = go.Figure(data=edge_traces + [node_trace])
+
+    # Update layout
+    fig.update_layout(
+        title="연결 관계 네트워크",
+        showlegend=True,
+        hovermode='closest',
+        margin=dict(b=20, l=5, r=5, t=40),
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        height=600,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="center",
+            x=0.5
+        )
+    )
+
+    return fig
+
+
+def render_network_graph(connections: List[Dict[str, Any]]) -> None:
+    """
+    Render the network graph visualization.
+
+    Args:
+        connections: List of connections to visualize
+    """
+    if not connections:
+        st.info("💡 연결 관계를 추가하면 네트워크 그래프가 표시됩니다.")
+        return
+
+    st.subheader("🕸️ 연결 관계 네트워크")
+    st.caption(f"{len(connections)}개의 연결 관계를 시각화하고 있습니다.")
+
+    # Create and display graph
+    fig = create_network_graph(connections)
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Graph legend explanation
+    with st.expander("ℹ️ 그래프 설명"):
+        st.markdown("""
+        **네트워크 그래프 읽는 법**:
+
+        - **노드 (원)**: 12가지 세계관 요소
+        - **엣지 (선)**: 요소 간 연결 관계
+        - **색상**: 연결 관계의 타입
+
+        **상호작용**:
+        - 선 위에 마우스를 올리면 연결 상세 정보를 볼 수 있습니다
+        - 범례를 클릭하여 특정 관계 타입을 표시/숨김할 수 있습니다
+        - 확대/축소 및 드래그가 가능합니다
+
+        **팁**:
+        - 중심에 가까운 요소일수록 많은 연결을 가집니다
+        - 같은 색상의 선이 많으면 해당 관계 타입이 지배적입니다
+        """)
 
 
 def render_connection_card(
@@ -270,14 +441,18 @@ def render_connections_page(
 
     st.divider()
 
-    # Two columns: List and Form
-    col1, col2 = st.columns([3, 2])
+    # Tabs for different views
+    tab1, tab2, tab3 = st.tabs(["📋 목록 보기", "🕸️ 그래프 보기", "➕ 연결 추가"])
 
-    with col1:
+    with tab1:
         # Connection list
         render_connection_list(project.connections, on_delete_connection)
 
-    with col2:
+    with tab2:
+        # Network graph visualization
+        render_network_graph(project.connections)
+
+    with tab3:
         # Add connection form
         render_connection_form(on_add_connection)
 
