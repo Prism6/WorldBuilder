@@ -352,7 +352,7 @@ streamlit run app.py
 
 **개발**:
 - Claude Sonnet 4.5 (Anthropic) - AI 개발 파트너
-- Human Developer - 프로젝트 기획 및 설계
+- Sangbuhm Hahn (a.k.a. Buhmtastic) (snakelogan202@gmail.com) - 프로젝트 기획 및 설계
 
 **기술**:
 - [Streamlit](https://streamlit.io/) - 웹 UI 프레임워크
