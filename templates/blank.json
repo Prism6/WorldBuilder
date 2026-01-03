@@ -1,0 +1,51 @@
+{
+  "project_name": "새로운 세계",
+  "genre": "SF/판타지",
+  "concept": {
+    "logline": "",
+    "keywords": []
+  },
+  "elements": {
+    "space": {
+      "description": ""
+    },
+    "time": {
+      "description": ""
+    },
+    "creatures": {
+      "description": ""
+    },
+    "nature": {
+      "description": ""
+    },
+    "culture": {
+      "description": ""
+    },
+    "language": {
+      "description": ""
+    },
+    "mythology": {
+      "description": ""
+    },
+    "philosophy": {
+      "description": ""
+    },
+    "rules": {
+      "natural": [],
+      "social": [],
+      "religious": []
+    },
+    "economy": {
+      "description": ""
+    },
+    "politics": {
+      "description": ""
+    },
+    "energy": {
+      "description": ""
+    }
+  },
+  "connections": [],
+  "notes": "",
+  "completion_rate": 0.0
+}

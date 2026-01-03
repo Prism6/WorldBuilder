@@ -1,0 +1,106 @@
+{
+  "project_name": "타이탄 콜로니",
+  "genre": "하드 SF",
+  "concept": {
+    "logline": "토성의 위성 타이탄에 건설된 인류 최초의 자급자족 우주 식민지, 지구와의 연락이 끊긴 후 독립 문명으로 진화한다",
+    "keywords": [
+      "우주 식민지",
+      "타이탄",
+      "테라포밍",
+      "AI 거버넌스",
+      "독립 문명"
+    ]
+  },
+  "elements": {
+    "space": {
+      "description": "토성의 최대 위성 타이탄. 지름 5,150km, 표면 온도 -179°C. 질소 대기와 메탄 호수 존재. 지하 100m 깊이에 건설된 7개 돔 도시가 터널로 연결. 중앙 돔 '새벽(Aurora)'이 행정 수도."
+    },
+    "time": {
+      "description": "서기 2287년. 지구 출발 후 15년째, 식민지 건설 후 10년째. 3년 전 지구와의 통신 두절. 현재 2세대가 성장 중이며, 타이탄 출생자가 전체 인구의 30%를 차지."
+    },
+    "creatures": {
+      "description": "인류 12만명. 지구 출신 1세대 70%, 타이탄 출생 2세대 30%. 저중력 적응으로 2세대는 평균 신장 2m 이상. 유전자 개조 금지로 순수 호모 사피엔스 유지. 반려 동물은 저중력 적응 고양이와 개만 허용."
+    },
+    "nature": {
+      "description": "자연 상태의 타이탄은 메탄 호수와 질소 대기. 돔 내부는 인공 생태계 - 수경 재배 농장, LED 태양광, 순환 수자원. 미생물부터 식물까지 완전한 순환 생태계 구축. 외부 탐사 시 영하 180도 방호복 필수."
+    },
+    "culture": {
+      "description": "실용주의와 과학 중심 문화. '생존이 곧 정의'라는 가치관. 모든 구성원의 기여를 중시하는 공동체주의. 타이탄 출생자는 'New Gen'으로 불리며 독자적 정체성 형성 중. 주 1회 공동체 집회 개최."
+    },
+    "language": {
+      "description": "공용어는 단순화된 글로벌 영어(Simplified Global English). 과학 기술 용어는 국제 표준 코드 사용. New Gen 사이에서 타이탄 속어 발달 중 ('티탄어'). 모든 문서는 디지털화되어 AI가 자동 번역."
+    },
+    "mythology": {
+      "description": "지구를 '고향 별(Homeworld)'로 신화화. 출발 당시 희생자들을 '선구자(Pioneers)'로 추모. 타이탄 최초 발걸음을 기념하는 '착륙의 날'이 최대 명절. AI CORE를 수호신처럼 대하는 경향."
+    },
+    "philosophy": {
+      "description": "집단주의와 개인의 가치 사이 균형 추구. '생존 제일주의(Survival First)' - 식민지 존속이 모든 가치의 우선. 과학적 합리주의가 지배적. 최근 New Gen 사이에서 자유주의 사상 대두."
+    },
+    "rules": {
+      "natural": [
+        "타이탄 중력은 지구의 14%로 모든 물리 법칙이 그에 맞춰 작동한다",
+        "외부는 영하 180도로 방호복 없이는 30초 내 사망",
+        "메탄 호수는 채굴 가능한 화학 연료이자 위험한 폭발물"
+      ],
+      "social": [
+        "모든 성인은 주 30시간 공동체 노동 의무",
+        "자원 배급은 기여도와 필요에 따라 AI가 공정하게 분배",
+        "인구 제한 - 생태계 수용력에 따라 출산 허가제 운영"
+      ],
+      "religious": [
+        "종교의 자유는 보장되나 공공 의사결정에는 과학이 우선",
+        "착륙의 날(매년 9월 23일)은 모두가 참여하는 유일한 의례",
+        "사망자는 유기물 재활용 시스템에 환원되어 식민지 일부가 된다"
+      ]
+    },
+    "economy": {
+      "description": "자원 기반 경제(Resource-Based Economy). 화폐 폐지, 기여 크레딧 시스템 운영. 주 산업은 식량 생산, 산소 생성, 건축 자재 제조. 타이탄 메탄 채굴과 정제. 희소 자원(전자 부품, 의료품)은 엄격히 배급."
+    },
+    "politics": {
+      "description": "AI 보조 민주주의. 중앙 AI 'CORE'가 데이터 기반 정책 제안, 시민 투표로 결정. 7개 돔마다 선출된 대표가 평의회 구성. 긴급 상황 시 '생존 위원회' 발동 - 5인 전문가가 즉각 결정. 지구 정부와 단절로 독립 논쟁."
+    },
+    "energy": {
+      "description": "복합 에너지 시스템. 주 에너지원은 핵융합로(중수소-헬륨3). 보조로 타이탄 메탄 연료전지. 태양광은 토성 거리로 인해 비효율적. 모든 열은 재활용. 에너지 효율 98% 목표. 최근 핵융합로 노후화 문제."
+    }
+  },
+  "connections": [
+    {
+      "from_element": "space",
+      "to_element": "creatures",
+      "connection_type": "causes",
+      "description": "타이탄의 저중력 환경이 2세대의 신체 변화를 유발, 지구 귀환 불가능"
+    },
+    {
+      "from_element": "energy",
+      "to_element": "economy",
+      "connection_type": "enables",
+      "description": "안정적 에너지 공급이 자급자족 경제의 기반"
+    },
+    {
+      "from_element": "politics",
+      "to_element": "energy",
+      "connection_type": "depends_on",
+      "description": "AI 거버넌스는 핵융합로의 안정적 작동에 의존"
+    },
+    {
+      "from_element": "philosophy",
+      "to_element": "culture",
+      "connection_type": "influences",
+      "description": "생존 제일주의가 공동체 중심 문화를 형성"
+    },
+    {
+      "from_element": "time",
+      "to_element": "mythology",
+      "connection_type": "causes",
+      "description": "지구와 단절이 길어지며 지구가 신화화되는 현상"
+    },
+    {
+      "from_element": "creatures",
+      "to_element": "politics",
+      "connection_type": "conflicts",
+      "description": "New Gen과 1세대 간 정치적 가치관 충돌"
+    }
+  ],
+  "notes": "템플릿: 하드 SF 우주 식민지. 현실적 과학 설정과 AI 거버넌스가 특징.",
+  "completion_rate": 0.92
+}

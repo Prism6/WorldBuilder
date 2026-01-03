@@ -2,10 +2,12 @@
 Service layer for project management business logic.
 """
 
-from typing import Dict, Optional
+import os
+import json
+from typing import Dict, Optional, List
 from models.project import Project
 from repositories.project_repository import ProjectRepository
-from exceptions import ProjectNotFoundException
+from exceptions import ProjectNotFoundException, ProjectLoadError
 from utils.logger import get_logger
 from constants import (
     DEFAULT_PROJECT_NAME,
@@ -14,6 +16,33 @@ from constants import (
 )
 
 logger = get_logger(__name__)
+
+# Template directory
+TEMPLATE_DIR = "templates"
+
+# Available templates with metadata
+TEMPLATES = {
+    "blank": {
+        "name": "📄 빈 템플릿",
+        "description": "기본 구조만 있는 빈 프로젝트",
+        "file": "blank.json"
+    },
+    "fantasy": {
+        "name": "🏰 판타지",
+        "description": "마법과 드래곤의 중세 판타지 세계",
+        "file": "fantasy.json"
+    },
+    "scifi": {
+        "name": "🚀 SF",
+        "description": "우주 식민지와 미래 기술의 SF 세계",
+        "file": "scifi.json"
+    },
+    "modern": {
+        "name": "🏙️ 현대",
+        "description": "기업 지배 디스토피아 현대 도시",
+        "file": "modern.json"
+    }
+}
 
 
 class ProjectManager:
@@ -219,3 +248,64 @@ class ProjectManager:
         project.update_completion_rate()
         logger.debug(f"Completion rate for {project.project_id}: {project.completion_rate:.1%}")
         return project.completion_rate
+
+    @staticmethod
+    def list_templates() -> Dict[str, Dict[str, str]]:
+        """
+        List all available project templates.
+
+        Returns:
+            Dictionary mapping template IDs to template metadata
+        """
+        logger.debug(f"Listing {len(TEMPLATES)} available templates")
+        return TEMPLATES
+
+    def create_project_from_template(self, template_id: str) -> Project:
+        """
+        Create a new project from a template.
+
+        Args:
+            template_id: ID of the template to use (e.g., 'fantasy', 'scifi')
+
+        Returns:
+            The newly created project based on the template
+
+        Raises:
+            ProjectLoadError: If template file cannot be loaded
+        """
+        logger.info(f"Creating project from template: {template_id}")
+
+        if template_id not in TEMPLATES:
+            error_msg = f"Template '{template_id}' not found. Available: {list(TEMPLATES.keys())}"
+            logger.error(error_msg)
+            raise ProjectLoadError(error_msg)
+
+        template_file = TEMPLATES[template_id]["file"]
+        template_path = os.path.join(TEMPLATE_DIR, template_file)
+
+        if not os.path.exists(template_path):
+            error_msg = f"Template file not found: {template_path}"
+            logger.error(error_msg)
+            raise ProjectLoadError(error_msg)
+
+        try:
+            with open(template_path, 'r', encoding='utf-8') as f:
+                template_data = json.load(f)
+
+            # Create project from template data
+            # Note: from_dict will generate a new project_id and timestamps
+            project = Project.from_dict(template_data)
+
+            logger.info(f"Project created from template '{template_id}': {project.project_name}")
+            logger.debug(f"New project ID: {project.project_id}")
+
+            return project
+
+        except json.JSONDecodeError as e:
+            error_msg = f"Invalid JSON in template file {template_path}: {str(e)}"
+            logger.error(error_msg)
+            raise ProjectLoadError(error_msg)
+        except Exception as e:
+            error_msg = f"Error loading template {template_id}: {str(e)}"
+            logger.error(error_msg)
+            raise ProjectLoadError(error_msg)

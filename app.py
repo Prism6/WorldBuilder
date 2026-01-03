@@ -31,16 +31,35 @@ project_manager = ProjectManager(repository=repository)
 logger.info("WorldBuilder application initialized")
 
 # --- Helper Functions ---
-def create_new_project() -> None:
-    """Initialize a new project in session state."""
+def create_new_project(template_id: Optional[str] = None) -> None:
+    """
+    Initialize a new project in session state.
+
+    Args:
+        template_id: Optional template ID to use (e.g., 'fantasy', 'scifi')
+    """
     try:
-        logger.debug("Creating new project from UI")
-        st.session_state.current_project = project_manager.create_new_project()
+        if template_id and template_id != "blank":
+            # Create from template
+            logger.debug(f"Creating new project from template: {template_id}")
+            st.session_state.current_project = project_manager.create_project_from_template(template_id)
+            st.success(f"템플릿 '{template_id}'로 새 프로젝트가 생성되었습니다.")
+            logger.info(f"New project created from template: {template_id}")
+        else:
+            # Create blank project
+            logger.debug("Creating new blank project from UI")
+            st.session_state.current_project = project_manager.create_new_project()
+            st.success("새 프로젝트가 생성되었습니다.")
+            logger.info("New blank project created successfully")
+
         st.session_state.project_saved = False
-        st.success("새 프로젝트가 생성되었습니다.")
-        logger.info("New project created successfully")
+
     except ProjectValidationError as e:
         error_msg = f"프로젝트 생성 실패: {str(e)}"
+        st.error(error_msg)
+        logger.error(error_msg)
+    except ProjectLoadError as e:
+        error_msg = f"템플릿 로드 실패: {str(e)}"
         st.error(error_msg)
         logger.error(error_msg)
 
@@ -99,6 +118,16 @@ def get_available_projects() -> dict[str, str]:
     """
     logger.debug("Getting available projects from UI")
     return project_manager.list_all_projects()
+
+def get_available_templates() -> dict[str, dict[str, str]]:
+    """
+    Get all available project templates.
+
+    Returns:
+        Dictionary mapping template IDs to template metadata
+    """
+    logger.debug("Getting available templates from UI")
+    return ProjectManager.list_templates()
 
 def update_element(element_name: str, description: str) -> None:
     """
@@ -264,11 +293,13 @@ if 'current_page' not in st.session_state:
 
 # --- Sidebar ---
 available_projects = get_available_projects()
+available_templates = get_available_templates()
 new_page = render_sidebar(
     on_new_project=create_new_project,
     on_load_project=load_project,
     on_save_project=save_project,
     available_projects=available_projects,
+    available_templates=available_templates,
     is_project_saved=st.session_state.project_saved,
     current_page=st.session_state.current_page
 )
