@@ -211,7 +211,9 @@ WorldBuilder/
 ├── data/                           # 데이터 저장
 │   └── projects/                  # 프로젝트 JSON 파일
 │
-└── docs/                           # 문서
+├── docs/                           # 문서
+│   └── ARCHITECTURE.md            # 아키텍처 설명
+└── devlog/                         # 개발 로그
     ├── 20251228_DevLog_WB01.md
     ├── 20251229_DevLog_WB02.md
     ├── 20260102_DevLog_WB03.md
@@ -271,10 +273,10 @@ radon mi .
 
 자세한 개발 과정과 설계 결정은 DevLog를 참조하세요:
 
-- [WB01 - 초기 프로젝트 구조](20251228_DevLog_WB01.md)
-- [WB02 - 객체지향 리팩토링](20251229_DevLog_WB02.md)
-- [WB03 - UI 컴포넌트 구현 (Phase 1-4)](20260102_DevLog_WB03.md)
-- [WB04 - 연결 관계 기능 완성 (Phase 5)](20260103_DevLog_WB04.md)
+- [WB01 - 초기 프로젝트 구조](devlog/20251228_DevLog_WB01.md)
+- [WB02 - 객체지향 리팩토링](devlog/20251229_DevLog_WB02.md)
+- [WB03 - UI 컴포넌트 구현 (Phase 1-4)](devlog/20260102_DevLog_WB03.md)
+- [WB04 - 연결 관계 기능 완성 (Phase 5)](devlog/20260103_DevLog_WB04.md)
 
 ---
 
