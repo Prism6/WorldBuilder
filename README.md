@@ -184,13 +184,15 @@ WorldBuilder/
 ├── constants.py                    # 상수 정의
 ├── exceptions.py                   # 커스텀 예외
 ├── requirements.txt                # Python 의존성
+├── pytest.ini                      # 테스트 설정
+├── CLAUDE.md                       # AI 개발 가이드 (명령어, 규칙)
 │
 ├── components/                     # UI 컴포넌트
 │   ├── sidebar.py                 # 사이드바
 │   ├── dashboard.py               # 대시보드
 │   ├── element_form.py            # 12요소 편집 폼
 │   ├── concept_form.py            # 컨셉 편집 폼
-│   ├── connections.py             # 연결 관계 UI
+│   ├── connections.py             # 연결 관계 UI + 네트워크 그래프
 │   └── export.py                  # 내보내기 UI
 │
 ├── models/                         # 데이터 모델
@@ -207,6 +209,18 @@ WorldBuilder/
 │   ├── json_utils.py              # JSON 처리
 │   ├── logger.py                  # 로깅
 │   └── markdown_export.py         # Markdown 변환
+│
+├── templates/                      # 프로젝트 템플릿
+│   ├── blank.json                 # 빈 템플릿
+│   ├── fantasy.json               # 판타지 세계관
+│   ├── scifi.json                 # SF 세계관
+│   └── modern.json                # 현대 배경
+│
+├── tests/                          # 테스트
+│   ├── conftest.py                # 공통 Fixture
+│   ├── test_models.py             # 모델 테스트 (25개)
+│   ├── test_services.py           # 서비스 테스트 (16개)
+│   └── test_repositories.py       # 저장소 테스트 (19개)
 │
 ├── data/                           # 데이터 저장
 │   └── projects/                  # 프로젝트 JSON 파일
@@ -271,12 +285,15 @@ radon mi .
 
 ## 📚 개발 문서
 
-자세한 개발 과정과 설계 결정은 DevLog를 참조하세요:
+**개발 가이드**
+- [CLAUDE.md](CLAUDE.md) — 명령어, 코딩 규칙, 커밋 컨벤션
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 레이어 구조, 설계 패턴, 주요 설계 결정
 
+**개발 로그**
 - [WB01 - 초기 프로젝트 구조](devlog/20251228_DevLog_WB01.md)
 - [WB02 - 객체지향 리팩토링](devlog/20251229_DevLog_WB02.md)
 - [WB03 - UI 컴포넌트 구현 (Phase 1-4)](devlog/20260102_DevLog_WB03.md)
-- [WB04 - 연결 관계 기능 완성 (Phase 5)](devlog/20260103_DevLog_WB04.md)
+- [WB04 - 연결 관계 기능 완성 (Phase 5-7)](devlog/20260103_DevLog_WB04.md)
 
 ---
 
@@ -291,16 +308,16 @@ radon mi .
 - [x] 연결 관계 관리
 - [x] Markdown/JSON 내보내기
 
-### 🔮 향후 계획
+### ✅ 완료된 개선 사항
 
 **v1.1 - 품질 개선**
-- [ ] pytest 테스트 작성
-- [ ] 사용자 가이드 문서
+- [x] pytest 테스트 작성 (60개, 83% 커버리지)
+- [x] 사용자 가이드 문서 (README)
 - [ ] 에러 처리 개선
 
 **v1.2 - 기능 확장**
-- [ ] 연결 관계 네트워크 그래프 시각화
-- [ ] 프로젝트 템플릿 제공 (판타지, SF, 현대)
+- [x] 연결 관계 네트워크 그래프 시각화 (Plotly)
+- [x] 프로젝트 템플릿 제공 (판타지, SF, 현대)
 - [ ] PDF 내보내기
 
 **v2.0 - 협업 기능**
@@ -353,7 +370,7 @@ streamlit run app.py
 ## 👏 크레딧
 
 **개발**:
-- Claude Sonnet 4.5 (Anthropic) - AI 개발 파트너
+- Claude Sonnet 4.6 (Anthropic) - AI 개발 파트너
 - Sangbuhm Hahn (a.k.a. Buhmtastic) (snakelogan202@gmail.com) - 프로젝트 기획 및 설계
 
 **기술**:
