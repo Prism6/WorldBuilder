@@ -177,6 +177,38 @@ class Project:
 
         self._update_timestamp()
 
+    def update_logline(self, logline: str) -> None:
+        """Update project logline."""
+        self.concept.logline = logline
+        self._update_timestamp()
+
+    def update_keywords(self, keywords: List[str]) -> None:
+        """Update project keywords."""
+        self.concept.keywords = keywords
+        self._update_timestamp()
+
+    def update_rules(
+        self,
+        natural: List[str],
+        social: List[str],
+        religious: List[str]
+    ) -> None:
+        """Update rules element."""
+        self.elements.rules.natural = natural
+        self.elements.rules.social = social
+        self.elements.rules.religious = religious
+        self._update_timestamp()
+
+    def add_connection(self, connection: Dict[str, Any]) -> None:
+        """Append a new connection and update timestamp."""
+        self.connections.append(connection)
+        self._update_timestamp()
+
+    def remove_connection(self, index: int) -> None:
+        """Remove a connection by index and update timestamp."""
+        self.connections.pop(index)
+        self._update_timestamp()
+
     def update_element(self, element_name: str, description: str) -> None:
         """
         Update a specific world element.

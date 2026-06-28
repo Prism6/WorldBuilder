@@ -23,12 +23,18 @@ from components.connections import render_connections_page
 
 logger = get_logger(__name__)
 
-# --- Initialize Services (Dependency Injection) ---
-# Create repository and service instances
-repository = JsonProjectRepository(storage_dir=DEFAULT_STORAGE_DIR)
-project_manager = ProjectManager(repository=repository)
 
-logger.info("WorldBuilder application initialized")
+# --- Initialize Services (cached: initialized once per process) ---
+@st.cache_resource
+def _init_project_manager() -> ProjectManager:
+    repo = JsonProjectRepository(storage_dir=DEFAULT_STORAGE_DIR)
+    pm = ProjectManager(repository=repo)
+    logger.info("WorldBuilder application initialized")
+    return pm
+
+
+project_manager = _init_project_manager()
+
 
 # --- Helper Functions ---
 def create_new_project(template_id: Optional[str] = None) -> None:
@@ -40,13 +46,13 @@ def create_new_project(template_id: Optional[str] = None) -> None:
     """
     try:
         if template_id and template_id != "blank":
-            # Create from template
             logger.debug(f"Creating new project from template: {template_id}")
-            st.session_state.current_project = project_manager.create_project_from_template(template_id)
+            st.session_state.current_project = (
+                project_manager.create_project_from_template(template_id)
+            )
             st.success(f"템플릿 '{template_id}'로 새 프로젝트가 생성되었습니다.")
             logger.info(f"New project created from template: {template_id}")
         else:
-            # Create blank project
             logger.debug("Creating new blank project from UI")
             st.session_state.current_project = project_manager.create_new_project()
             st.success("새 프로젝트가 생성되었습니다.")
@@ -62,6 +68,7 @@ def create_new_project(template_id: Optional[str] = None) -> None:
         error_msg = f"템플릿 로드 실패: {str(e)}"
         st.error(error_msg)
         logger.error(error_msg)
+
 
 def load_project(project_id: str) -> None:
     """
@@ -86,6 +93,7 @@ def load_project(project_id: str) -> None:
         st.error(error_msg)
         logger.error(error_msg)
 
+
 def save_project() -> None:
     """Save the current project from session state to disk."""
     if 'current_project' not in st.session_state or not st.session_state.current_project:
@@ -109,6 +117,7 @@ def save_project() -> None:
         st.error(error_msg)
         logger.error(error_msg)
 
+
 def get_available_projects() -> dict[str, str]:
     """
     Get all available projects.
@@ -118,6 +127,7 @@ def get_available_projects() -> dict[str, str]:
     """
     logger.debug("Getting available projects from UI")
     return project_manager.list_all_projects()
+
 
 def get_available_templates() -> dict[str, dict[str, str]]:
     """
@@ -129,9 +139,10 @@ def get_available_templates() -> dict[str, dict[str, str]]:
     logger.debug("Getting available templates from UI")
     return ProjectManager.list_templates()
 
+
 def update_element(element_name: str, description: str) -> None:
     """
-    Update a world element and mark project as unsaved.
+    Update a world element via the service layer.
 
     Args:
         element_name: Name of the element to update
@@ -140,8 +151,7 @@ def update_element(element_name: str, description: str) -> None:
     try:
         logger.debug(f"Updating element '{element_name}' from UI")
         project = st.session_state.current_project
-        project.update_element(element_name, description)
-        project.update_completion_rate()
+        project_manager.update_project_element(project, element_name, description)
         st.session_state.project_saved = False
         logger.info(f"Element '{element_name}' updated successfully")
     except ProjectValidationError as e:
@@ -149,9 +159,10 @@ def update_element(element_name: str, description: str) -> None:
         st.error(error_msg)
         logger.error(error_msg)
 
+
 def update_rules(natural: list[str], social: list[str], religious: list[str]) -> None:
     """
-    Update the rules element and mark project as unsaved.
+    Update the rules element via the service layer.
 
     Args:
         natural: List of natural rules
@@ -161,11 +172,7 @@ def update_rules(natural: list[str], social: list[str], religious: list[str]) ->
     try:
         logger.debug("Updating rules element from UI")
         project = st.session_state.current_project
-        project.elements.rules.natural = natural
-        project.elements.rules.social = social
-        project.elements.rules.religious = religious
-        project.update_completion_rate()
-        project._update_timestamp()
+        project_manager.update_project_rules(project, natural, social, religious)
         st.session_state.project_saved = False
         logger.info("Rules element updated successfully")
     except Exception as e:
@@ -173,9 +180,10 @@ def update_rules(natural: list[str], social: list[str], religious: list[str]) ->
         st.error(error_msg)
         logger.error(error_msg)
 
+
 def update_concept_metadata(project_name: Optional[str], genre: Optional[str]) -> None:
     """
-    Update project metadata (name and genre) and mark project as unsaved.
+    Update project metadata (name and genre) via the service layer.
 
     Args:
         project_name: New project name
@@ -192,9 +200,10 @@ def update_concept_metadata(project_name: Optional[str], genre: Optional[str]) -
         st.error(error_msg)
         logger.error(error_msg)
 
+
 def update_concept_logline(logline: str) -> None:
     """
-    Update project logline and mark project as unsaved.
+    Update project logline via the service layer.
 
     Args:
         logline: New logline
@@ -202,8 +211,7 @@ def update_concept_logline(logline: str) -> None:
     try:
         logger.debug("Updating project logline from UI")
         project = st.session_state.current_project
-        project.concept.logline = logline
-        project._update_timestamp()
+        project_manager.update_project_logline(project, logline)
         st.session_state.project_saved = False
         logger.info("Project logline updated")
     except Exception as e:
@@ -211,9 +219,10 @@ def update_concept_logline(logline: str) -> None:
         st.error(error_msg)
         logger.error(error_msg)
 
+
 def update_concept_keywords(keywords: list[str]) -> None:
     """
-    Update project keywords and mark project as unsaved.
+    Update project keywords via the service layer.
 
     Args:
         keywords: New keywords list
@@ -221,8 +230,7 @@ def update_concept_keywords(keywords: list[str]) -> None:
     try:
         logger.debug("Updating project keywords from UI")
         project = st.session_state.current_project
-        project.concept.keywords = keywords
-        project._update_timestamp()
+        project_manager.update_project_keywords(project, keywords)
         st.session_state.project_saved = False
         logger.info(f"Project keywords updated: {len(keywords)} keywords")
     except Exception as e:
@@ -233,18 +241,21 @@ def update_concept_keywords(keywords: list[str]) -> None:
 
 def add_connection(connection: dict) -> None:
     """
-    Add a new connection between elements and mark project as unsaved.
+    Add a new connection between elements.
 
     Args:
-        connection: Connection dictionary with from_element, to_element, connection_type, description
+        connection: Connection dictionary with from_element, to_element,
+                    connection_type, description
     """
     try:
-        logger.debug(f"Adding connection: {connection.get('from_element')} -> {connection.get('to_element')}")
+        logger.debug(
+            f"Adding connection: {connection.get('from_element')} -> "
+            f"{connection.get('to_element')}"
+        )
         project = st.session_state.current_project
-        project.connections.append(connection)
-        project._update_timestamp()
+        project.add_connection(connection)
         st.session_state.project_saved = False
-        logger.info(f"Connection added successfully. Total connections: {len(project.connections)}")
+        logger.info(f"Connection added successfully. Total: {len(project.connections)}")
     except Exception as e:
         error_msg = f"연결 추가 실패: {str(e)}"
         st.error(error_msg)
@@ -253,7 +264,7 @@ def add_connection(connection: dict) -> None:
 
 def delete_connection(index: int) -> None:
     """
-    Delete a connection by index and mark project as unsaved.
+    Delete a connection by index.
 
     Args:
         index: Index of connection to delete
@@ -261,19 +272,18 @@ def delete_connection(index: int) -> None:
     try:
         logger.debug(f"Deleting connection at index {index}")
         project = st.session_state.current_project
-        if 0 <= index < len(project.connections):
-            deleted = project.connections.pop(index)
-            project._update_timestamp()
-            st.session_state.project_saved = False
-            logger.info(f"Connection deleted successfully. Remaining connections: {len(project.connections)}")
-        else:
-            error_msg = f"잘못된 연결 인덱스: {index}"
-            st.error(error_msg)
-            logger.error(error_msg)
+        project.remove_connection(index)
+        st.session_state.project_saved = False
+        logger.info(f"Connection deleted. Remaining: {len(project.connections)}")
+    except IndexError:
+        error_msg = f"잘못된 연결 인덱스: {index}"
+        st.error(error_msg)
+        logger.error(error_msg)
     except Exception as e:
         error_msg = f"연결 삭제 실패: {str(e)}"
         st.error(error_msg)
         logger.error(error_msg)
+
 
 # --- Streamlit Page Configuration ---
 st.set_page_config(
@@ -311,11 +321,9 @@ if new_page:
 # --- Main Content Area ---
 project = st.session_state.current_project
 
-# Unsaved changes warning
 if not st.session_state.project_saved:
     st.warning("⚠️ 저장되지 않은 변경 사항이 있습니다.")
 
-# Render current page
 if st.session_state.current_page == 'dashboard':
     render_dashboard(
         project=project,
@@ -324,14 +332,12 @@ if st.session_state.current_page == 'dashboard':
         on_goto_connections=lambda: st.session_state.update({'current_page': 'connections'})
     )
 elif st.session_state.current_page == 'concept':
-    # 컨셉 편집 페이지
     render_concept_form(
         project=project,
         on_update_metadata=update_concept_metadata,
         on_update_logline=update_concept_logline,
         on_update_keywords=update_concept_keywords
     )
-    # 대시보드로 돌아가기 버튼
     st.markdown("---")
     if st.button("⬅️ 대시보드로 돌아가기", use_container_width=True):
         st.session_state.current_page = 'dashboard'

@@ -235,6 +235,62 @@ class ProjectManager:
         logger.debug(f"Element updated, new completion rate: {project.completion_rate:.1%}")
         return project
 
+    def update_project_logline(self, project: Project, logline: str) -> Project:
+        """
+        Update project logline.
+
+        Args:
+            project: The project to update
+            logline: New logline
+
+        Returns:
+            The updated project
+        """
+        logger.info(f"Updating logline for project: {project.project_id}")
+        project.update_logline(logline)
+        return project
+
+    def update_project_keywords(self, project: Project, keywords: List[str]) -> Project:
+        """
+        Update project keywords.
+
+        Args:
+            project: The project to update
+            keywords: New keywords list
+
+        Returns:
+            The updated project
+        """
+        logger.info(
+            f"Updating keywords for project: {project.project_id} ({len(keywords)} keywords)"
+        )
+        project.update_keywords(keywords)
+        return project
+
+    def update_project_rules(
+        self,
+        project: Project,
+        natural: List[str],
+        social: List[str],
+        religious: List[str]
+    ) -> Project:
+        """
+        Update project rules and recalculate completion rate.
+
+        Args:
+            project: The project to update
+            natural: Natural law rules
+            social: Social norm rules
+            religious: Religious rules
+
+        Returns:
+            The updated project
+        """
+        logger.info(f"Updating rules for project: {project.project_id}")
+        project.update_rules(natural, social, religious)
+        project.update_completion_rate()
+        return project
+
     def get_project_completion_rate(self, project: Project) -> float:
         """
         Get the current completion rate of a project.
