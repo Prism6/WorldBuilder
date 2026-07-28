@@ -7,25 +7,9 @@ between world elements.
 import streamlit as st
 import plotly.graph_objects as go
 import math
-from typing import Callable, Dict, Any, List
-from models.project import Project
-
-
-# 12요소 이름과 라벨 매핑
-ELEMENT_LABELS = {
-    'space': '🌌 공간',
-    'time': '⏰ 시간',
-    'creatures': '👥 생물',
-    'nature': '🌿 자연',
-    'culture': '🎭 문화',
-    'language': '🗣️ 언어',
-    'mythology': '⚡ 신화',
-    'philosophy': '💭 철학',
-    'rules': '⚖️ 규칙',
-    'economy': '💰 경제',
-    'politics': '🏛️ 정치',
-    'energy': '✨ 에너지'
-}
+from typing import Callable, Dict, List
+from models.project import Project, Connection
+from constants import ELEMENT_LABELS
 
 # 연결 관계 타입
 CONNECTION_TYPES = {
@@ -48,7 +32,7 @@ CONNECTION_COLORS = {
 }
 
 
-def create_network_graph(connections: List[Dict[str, Any]]) -> go.Figure:
+def create_network_graph(connections: List[Connection]) -> go.Figure:
     """
     Create an interactive network graph visualization of connections.
 
@@ -84,7 +68,7 @@ def create_network_graph(connections: List[Dict[str, Any]]) -> go.Figure:
 
     for conn_type, color in CONNECTION_COLORS.items():
         # Filter connections of this type
-        type_connections = [c for c in connections if c.get('connection_type') == conn_type]
+        type_connections = [c for c in connections if c.connection_type == conn_type]
 
         if not type_connections:
             continue
@@ -94,8 +78,8 @@ def create_network_graph(connections: List[Dict[str, Any]]) -> go.Figure:
         edge_text = []
 
         for conn in type_connections:
-            from_elem = conn.get('from_element', '')
-            to_elem = conn.get('to_element', '')
+            from_elem = conn.from_element
+            to_elem = conn.to_element
 
             if from_elem not in node_pos or to_elem not in node_pos:
                 continue
@@ -108,7 +92,7 @@ def create_network_graph(connections: List[Dict[str, Any]]) -> go.Figure:
             edge_y.extend([y0, y1, None])
 
             # Prepare hover text
-            desc = conn.get('description', '설명 없음')
+            desc = conn.description or '설명 없음'
             hover = f"{ELEMENT_LABELS[from_elem]} → {ELEMENT_LABELS[to_elem]}<br>{desc}"
             edge_text.append(hover)
 
@@ -169,7 +153,7 @@ def create_network_graph(connections: List[Dict[str, Any]]) -> go.Figure:
     return fig
 
 
-def render_network_graph(connections: List[Dict[str, Any]]) -> None:
+def render_network_graph(connections: List[Connection]) -> None:
     """
     Render the network graph visualization.
 
@@ -208,7 +192,7 @@ def render_network_graph(connections: List[Dict[str, Any]]) -> None:
 
 
 def render_connection_card(
-    connection: Dict[str, Any],
+    connection: Connection,
     index: int,
     on_delete: Callable[[int], None]
 ) -> None:
@@ -216,15 +200,14 @@ def render_connection_card(
     Render a single connection as a card.
 
     Args:
-        connection: Connection dictionary
+        connection: Connection object
         index: Index of the connection in the list
         on_delete: Callback to delete the connection
     """
-    from_label = ELEMENT_LABELS.get(connection.get('from_element', ''), '???')
-    to_label = ELEMENT_LABELS.get(connection.get('to_element', ''), '???')
-    conn_type = connection.get('connection_type', 'influences')
-    type_label = CONNECTION_TYPES.get(conn_type, '→')
-    description = connection.get('description', '')
+    from_label = ELEMENT_LABELS.get(connection.from_element, '???')
+    to_label = ELEMENT_LABELS.get(connection.to_element, '???')
+    type_label = CONNECTION_TYPES.get(connection.connection_type, '→')
+    description = connection.description
 
     # Card container
     with st.container():
@@ -246,7 +229,7 @@ def render_connection_card(
 
 
 def render_connection_form(
-    on_add: Callable[[Dict[str, Any]], None]
+    on_add: Callable[[Connection], None]
 ) -> None:
     """
     Render form to add a new connection.
@@ -297,19 +280,23 @@ def render_connection_form(
             if from_element == to_element:
                 st.error("❌ 같은 요소끼리는 연결할 수 없습니다.")
             else:
-                # Create connection
-                new_connection = {
-                    'from_element': from_element,
-                    'to_element': to_element,
-                    'connection_type': connection_type,
-                    'description': description.strip()
-                }
+                new_connection = Connection(
+                    from_element=from_element,
+                    to_element=to_element,
+                    connection_type=connection_type,
+                    description=description.strip()
+                )
                 on_add(new_connection)
-                st.success(f"✅ 연결이 추가되었습니다: {ELEMENT_LABELS[from_element]} {CONNECTION_TYPES[connection_type]} {ELEMENT_LABELS[to_element]}")
+                st.success(
+                    f"✅ 연결이 추가되었습니다: "
+                    f"{ELEMENT_LABELS[from_element]} "
+                    f"{CONNECTION_TYPES[connection_type]} "
+                    f"{ELEMENT_LABELS[to_element]}"
+                )
                 st.rerun()
 
 
-def render_connection_stats(connections: List[Dict[str, Any]]) -> None:
+def render_connection_stats(connections: List[Connection]) -> None:
     """
     Render statistics about connections.
 
@@ -325,8 +312,7 @@ def render_connection_stats(connections: List[Dict[str, Any]]) -> None:
     # Count by type
     type_counts: Dict[str, int] = {}
     for conn in connections:
-        conn_type = conn.get('connection_type', 'influences')
-        type_counts[conn_type] = type_counts.get(conn_type, 0) + 1
+        type_counts[conn.connection_type] = type_counts.get(conn.connection_type, 0) + 1
 
     # Display stats
     col1, col2, col3 = st.columns(3)
@@ -342,13 +328,13 @@ def render_connection_stats(connections: List[Dict[str, Any]]) -> None:
         # Count elements involved
         elements_involved = set()
         for conn in connections:
-            elements_involved.add(conn.get('from_element', ''))
-            elements_involved.add(conn.get('to_element', ''))
+            elements_involved.add(conn.from_element)
+            elements_involved.add(conn.to_element)
         st.metric("연결된 요소", f"{len(elements_involved)}/12")
 
 
 def render_connection_list(
-    connections: List[Dict[str, Any]],
+    connections: List[Connection],
     on_delete: Callable[[int], None]
 ) -> None:
     """
@@ -374,7 +360,7 @@ def render_connection_list(
 
     # Filter connections
     filtered = connections if filter_type == 'all' else [
-        c for c in connections if c.get('connection_type') == filter_type
+        c for c in connections if c.connection_type == filter_type
     ]
 
     if not filtered:
@@ -422,7 +408,7 @@ def render_connection_tips() -> None:
 
 def render_connections_page(
     project: Project,
-    on_add_connection: Callable[[Dict[str, Any]], None],
+    on_add_connection: Callable[[Connection], None],
     on_delete_connection: Callable[[int], None]
 ) -> None:
     """

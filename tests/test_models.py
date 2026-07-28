@@ -11,7 +11,8 @@ from models.project import (
     Concept,
     WorldElements,
     Element,
-    Rules
+    Rules,
+    Connection
 )
 from exceptions import ProjectValidationError
 
@@ -223,21 +224,21 @@ class TestProject:
         assert len(project.connections) == 0
 
         # Add a connection
-        project.connections.append({
-            'from_element': 'space',
-            'to_element': 'culture',
-            'connection_type': 'influences',
-            'description': 'Test connection'
-        })
+        project.add_connection(Connection(
+            from_element='space',
+            to_element='culture',
+            connection_type='influences',
+            description='Test connection'
+        ))
         assert len(project.connections) == 1
 
         # Add another connection
-        project.connections.append({
-            'from_element': 'economy',
-            'to_element': 'politics',
-            'connection_type': 'depends_on',
-            'description': 'Another connection'
-        })
+        project.add_connection(Connection(
+            from_element='economy',
+            to_element='politics',
+            connection_type='depends_on',
+            description='Another connection'
+        ))
         assert len(project.connections) == 2
 
     def test_sample_project_fixture(self, sample_project):
@@ -273,12 +274,12 @@ class TestProjectIntegration:
         project.elements.rules.social = ["AI have rights"]
 
         # Add connections
-        project.connections.append({
-            'from_element': 'energy',
-            'to_element': 'economy',
-            'connection_type': 'enables',
-            'description': 'Fusion power drives economy'
-        })
+        project.add_connection(Connection(
+            from_element='energy',
+            to_element='economy',
+            connection_type='enables',
+            description='Fusion power drives economy'
+        ))
 
         # Update completion
         project.update_completion_rate()

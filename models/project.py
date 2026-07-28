@@ -29,6 +29,15 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+@dataclass
+class Connection:
+    """Typed representation of a relationship between two world elements."""
+    from_element: str = ""
+    to_element: str = ""
+    connection_type: str = "influences"
+    description: str = ""
+
+
 # 각 12요소에 대한 데이터 구조
 @dataclass
 class Element:
@@ -86,7 +95,7 @@ class Project:
     elements: WorldElements = field(default_factory=WorldElements)
 
     # 그 외 메타 데이터
-    connections: List[Dict[str, Any]] = field(default_factory=list)
+    connections: List[Connection] = field(default_factory=list)
     notes: str = ""
     completion_rate: float = 0.0
 
@@ -199,7 +208,7 @@ class Project:
         self.elements.rules.religious = religious
         self._update_timestamp()
 
-    def add_connection(self, connection: Dict[str, Any]) -> None:
+    def add_connection(self, connection: Connection) -> None:
         """Append a new connection and update timestamp."""
         self.connections.append(connection)
         self._update_timestamp()
@@ -319,6 +328,12 @@ class Project:
 
             elements = WorldElements(**element_kwargs)
 
+            raw_connections = data.get("connections", [])
+            connections = [
+                Connection(**c) if isinstance(c, dict) else c
+                for c in raw_connections
+            ]
+
             project = cls(
                 project_id=data.get("project_id", str(uuid.uuid4())),
                 project_name=data.get("project_name", UNNAMED_PROJECT),
@@ -327,7 +342,7 @@ class Project:
                 genre=data.get("genre", DEFAULT_GENRE),
                 concept=Concept(**concept_data),
                 elements=elements,
-                connections=data.get("connections", []),
+                connections=connections,
                 notes=data.get("notes", ""),
                 completion_rate=data.get("completion_rate", 0.0)
             )

@@ -6,6 +6,7 @@ from typing import Optional
 import streamlit as st
 from repositories.json_project_repository import JsonProjectRepository
 from services.project_manager import ProjectManager
+from models.project import Connection
 from exceptions import (
     ProjectNotFoundException,
     ProjectValidationError,
@@ -239,18 +240,18 @@ def update_concept_keywords(keywords: list[str]) -> None:
         logger.error(error_msg)
 
 
-def add_connection(connection: dict) -> None:
+def add_connection(connection: Connection) -> None:
     """
     Add a new connection between elements.
 
     Args:
-        connection: Connection dictionary with from_element, to_element,
+        connection: Connection object with from_element, to_element,
                     connection_type, description
     """
     try:
         logger.debug(
-            f"Adding connection: {connection.get('from_element')} -> "
-            f"{connection.get('to_element')}"
+            f"Adding connection: {connection.from_element} -> "
+            f"{connection.to_element}"
         )
         project = st.session_state.current_project
         project.add_connection(connection)

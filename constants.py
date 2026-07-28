@@ -2,7 +2,7 @@
 Application constants and configuration values.
 """
 
-from typing import Final, List
+from typing import Final, Dict, List
 
 # Project defaults
 DEFAULT_PROJECT_NAME: Final[str] = "새로운 세계"
@@ -62,3 +62,19 @@ ERROR_FAILED_TO_CREATE: Final[str] = "Failed to create project from data: {}"
 # Project status labels
 UNKNOWN_PROJECT_LABEL: Final[str] = "Unknown Project ({})"
 CORRUPTED_PROJECT_LABEL: Final[str] = "Corrupted Project ({})"
+
+# Element labels — single source of truth for all UI components
+ELEMENT_LABELS: Final[Dict[str, str]] = {
+    'space': '🌌 공간',
+    'time': '⏰ 시간',
+    'creatures': '👥 생물',
+    'nature': '🌿 자연',
+    'culture': '🎭 문화',
+    'language': '🗣️ 언어',
+    'mythology': '⚡ 신화',
+    'philosophy': '💭 철학',
+    'rules': '⚖️ 규칙',
+    'economy': '💰 경제',
+    'politics': '🏛️ 정치',
+    'energy': '✨ 에너지',
+}

@@ -9,7 +9,7 @@ import shutil
 from typing import Generator
 import pytest
 
-from models.project import Project, Concept, WorldElements, Element, Rules
+from models.project import Project, Concept, WorldElements, Element, Rules, Connection
 from services.project_manager import ProjectManager
 from repositories.json_project_repository import JsonProjectRepository
 
@@ -47,18 +47,18 @@ def sample_project() -> Project:
 
     # Add connections
     project.connections = [
-        {
-            'from_element': 'space',
-            'to_element': 'culture',
-            'connection_type': 'influences',
-            'description': 'Mountain terrain shapes isolated cultures'
-        },
-        {
-            'from_element': 'economy',
-            'to_element': 'politics',
-            'connection_type': 'depends_on',
-            'description': 'Economic power determines political influence'
-        }
+        Connection(
+            from_element='space',
+            to_element='culture',
+            connection_type='influences',
+            description='Mountain terrain shapes isolated cultures'
+        ),
+        Connection(
+            from_element='economy',
+            to_element='politics',
+            connection_type='depends_on',
+            description='Economic power determines political influence'
+        ),
     ]
 
     # Update completion rate

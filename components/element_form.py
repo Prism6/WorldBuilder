@@ -6,7 +6,7 @@ import streamlit as st
 from models.project import Project
 from typing import Callable
 from utils.logger import get_logger
-from constants import ALL_ELEMENT_NAMES
+from constants import ALL_ELEMENT_NAMES, ELEMENT_LABELS
 
 logger = get_logger(__name__)
 
@@ -174,24 +174,8 @@ def render_element_form(
 
     st.markdown("---")
 
-    # 요소 라벨 매핑 (dashboard.py와 동일)
-    element_labels = {
-        'space': '🌌 공간',
-        'time': '⏰ 시간',
-        'creatures': '👥 생물',
-        'nature': '🌿 자연',
-        'culture': '🎭 문화',
-        'language': '🗣️ 언어',
-        'mythology': '⚡ 신화',
-        'philosophy': '💭 철학',
-        'rules': '⚖️ 규칙',
-        'economy': '💰 경제',
-        'politics': '🏛️ 정치',
-        'energy': '✨ 에너지'
-    }
-
     # 12개 요소를 탭으로 표시
-    tab_labels = [element_labels[name] for name in ALL_ELEMENT_NAMES]
+    tab_labels = [ELEMENT_LABELS[name] for name in ALL_ELEMENT_NAMES]
     tabs = st.tabs(tab_labels)
 
     # 각 탭에 해당하는 요소 편집기 렌더링
@@ -210,7 +194,7 @@ def render_element_form(
                 element = getattr(project.elements, element_name)
                 render_element_editor(
                     element_name=element_name,
-                    element_label=element_labels[element_name],
+                    element_label=ELEMENT_LABELS[element_name],
                     current_description=element.description,
                     on_save=on_update_element
                 )

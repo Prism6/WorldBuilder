@@ -6,7 +6,7 @@ import streamlit as st
 from models.project import Project
 from typing import Callable
 from utils.logger import get_logger
-from constants import ELEMENT_NAMES, ALL_ELEMENT_NAMES
+from constants import ALL_ELEMENT_NAMES, ELEMENT_LABELS
 
 logger = get_logger(__name__)
 
@@ -75,27 +75,12 @@ def render_element_progress(project: Project) -> None:
     """
     st.subheader("📝 요소별 진행도")
 
-    element_labels = {
-        'space': '🌌 공간',
-        'time': '⏰ 시간',
-        'creatures': '👥 생물',
-        'nature': '🌿 자연',
-        'culture': '🎭 문화',
-        'language': '🗣️ 언어',
-        'mythology': '⚡ 신화',
-        'philosophy': '💭 철학',
-        'rules': '⚖️ 규칙',
-        'economy': '💰 경제',
-        'politics': '🏛️ 정치',
-        'energy': '✨ 에너지'
-    }
-
     # Create two columns for elements
     col1, col2 = st.columns(2)
 
     for idx, element_name in enumerate(ALL_ELEMENT_NAMES):
         element = getattr(project.elements, element_name)
-        label = element_labels.get(element_name, element_name)
+        label = ELEMENT_LABELS.get(element_name, element_name)
 
         # Determine if element is filled
         if element_name == 'rules':
