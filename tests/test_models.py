@@ -251,6 +251,125 @@ class TestProject:
         assert sample_project.completion_rate > 0
 
 
+class TestProjectNewMethods:
+    """Tests for methods added in WB05."""
+
+    def test_update_logline(self):
+        """Test update_logline updates logline and timestamp."""
+        project = Project()
+        import time
+        time.sleep(0.01)
+        old_ts = project.updated_at
+
+        project.update_logline("A world of shadows and light")
+
+        assert project.concept.logline == "A world of shadows and light"
+        assert project.updated_at != old_ts
+
+    def test_update_logline_empty(self):
+        """Test update_logline accepts empty string."""
+        project = Project()
+        project.update_logline("")
+        assert project.concept.logline == ""
+
+    def test_update_keywords(self):
+        """Test update_keywords replaces keywords and updates timestamp."""
+        import time
+        project = Project()
+        project.concept.keywords = ["old"]
+        time.sleep(0.01)
+        old_ts = project.updated_at
+
+        project.update_keywords(["new", "keywords"])
+
+        assert project.concept.keywords == ["new", "keywords"]
+        assert project.updated_at != old_ts
+
+    def test_update_keywords_empty_list(self):
+        """Test update_keywords accepts empty list."""
+        project = Project()
+        project.concept.keywords = ["some", "keywords"]
+        project.update_keywords([])
+        assert project.concept.keywords == []
+
+    def test_update_rules_method(self):
+        """Test update_rules sets all three categories and updates timestamp."""
+        import time
+        project = Project()
+        time.sleep(0.01)
+        old_ts = project.updated_at
+
+        project.update_rules(
+            natural=["Gravity works"],
+            social=["Elders are respected"],
+            religious=["The sun is sacred"]
+        )
+
+        assert project.elements.rules.natural == ["Gravity works"]
+        assert project.elements.rules.social == ["Elders are respected"]
+        assert project.elements.rules.religious == ["The sun is sacred"]
+        assert project.updated_at != old_ts
+
+    def test_update_rules_partial(self):
+        """Test update_rules replaces all categories even with empty lists."""
+        project = Project()
+        project.elements.rules.natural = ["Old rule"]
+        project.update_rules(natural=[], social=[], religious=["New faith"])
+        assert project.elements.rules.natural == []
+        assert project.elements.rules.religious == ["New faith"]
+
+    def test_add_connection_method(self):
+        """Test add_connection appends Connection and updates timestamp."""
+        import time
+        project = Project()
+        time.sleep(0.01)
+        old_ts = project.updated_at
+
+        conn = Connection(
+            from_element='space',
+            to_element='culture',
+            connection_type='influences',
+            description='Geography shapes culture'
+        )
+        project.add_connection(conn)
+
+        assert len(project.connections) == 1
+        assert project.connections[0] == conn
+        assert project.updated_at != old_ts
+
+    def test_add_connection_multiple(self):
+        """Test adding multiple connections."""
+        project = Project()
+        project.add_connection(Connection(from_element='space', to_element='culture'))
+        project.add_connection(Connection(from_element='economy', to_element='politics'))
+        assert len(project.connections) == 2
+
+    def test_remove_connection_method(self):
+        """Test remove_connection removes by index and updates timestamp."""
+        import time
+        project = Project()
+        project.add_connection(Connection(from_element='space', to_element='culture'))
+        project.add_connection(Connection(from_element='economy', to_element='politics'))
+        time.sleep(0.01)
+        old_ts = project.updated_at
+
+        project.remove_connection(0)
+
+        assert len(project.connections) == 1
+        assert project.connections[0].from_element == 'economy'
+        assert project.updated_at != old_ts
+
+    def test_remove_connection_invalid_index(self):
+        """Test remove_connection raises IndexError on bad index."""
+        project = Project()
+        with pytest.raises(IndexError):
+            project.remove_connection(0)
+
+        project.add_connection(Connection(from_element='space', to_element='time'))
+        with pytest.raises(IndexError):
+            project.remove_connection(5)
+
+
 class TestProjectIntegration:
     """Integration tests for Project class."""
 

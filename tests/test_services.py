@@ -172,6 +172,99 @@ class TestProjectManager:
             )
 
 
+class TestProjectManagerNewMethods:
+    """Tests for service methods added in WB05 and caching added in WB06."""
+
+    def test_update_project_logline(self, project_manager, sample_project):
+        """Test update_project_logline delegates to model and returns project."""
+        result = project_manager.update_project_logline(
+            sample_project, "A new logline"
+        )
+
+        assert result is sample_project
+        assert sample_project.concept.logline == "A new logline"
+
+    def test_update_project_logline_empty(self, project_manager, sample_project):
+        """Test update_project_logline accepts empty string."""
+        result = project_manager.update_project_logline(sample_project, "")
+        assert result.concept.logline == ""
+
+    def test_update_project_keywords(self, project_manager, sample_project):
+        """Test update_project_keywords delegates to model and returns project."""
+        new_kws = ["dragon", "crystal", "sky"]
+        result = project_manager.update_project_keywords(sample_project, new_kws)
+
+        assert result is sample_project
+        assert sample_project.concept.keywords == new_kws
+
+    def test_update_project_keywords_empty(self, project_manager, sample_project):
+        """Test update_project_keywords accepts empty list."""
+        result = project_manager.update_project_keywords(sample_project, [])
+        assert result.concept.keywords == []
+
+    def test_update_project_rules_method(self, project_manager, sample_project):
+        """Test update_project_rules delegates + recalculates completion rate."""
+        initial_rate = sample_project.completion_rate
+        # Clear rules so completion rate changes
+        sample_project.elements.rules.natural = []
+        sample_project.elements.rules.social = []
+        sample_project.elements.rules.religious = []
+        sample_project.update_completion_rate()
+        rate_without_rules = sample_project.completion_rate
+
+        result = project_manager.update_project_rules(
+            sample_project,
+            natural=["Gravity"],
+            social=["Elders rule"],
+            religious=["Sun worship"]
+        )
+
+        assert result is sample_project
+        assert sample_project.elements.rules.natural == ["Gravity"]
+        assert sample_project.elements.rules.social == ["Elders rule"]
+        assert sample_project.elements.rules.religious == ["Sun worship"]
+        # Completion rate should increase after rules are filled
+        assert sample_project.completion_rate > rate_without_rules
+        _ = initial_rate  # referenced to suppress unused warning
+
+    def test_project_list_cache_hit(self, project_manager, sample_project):
+        """Test list_all_projects returns cached result on second call."""
+        project_manager.save_project(sample_project)
+
+        first = project_manager.list_all_projects()
+        # Force cache hit by setting timestamp to recent value
+        import time
+        project_manager._cache_timestamp = time.time()
+        second = project_manager.list_all_projects()
+
+        assert first == second
+        assert sample_project.project_id in second
+
+    def test_project_list_cache_invalidated_on_save(self, project_manager):
+        """Test that saving a project invalidates the cache."""
+        import time
+        # Prime the cache
+        project_manager.list_all_projects()
+        project_manager._cache_timestamp = time.time()  # force cache fresh
+
+        new_project = project_manager.create_new_project("Cache Test")
+        project_manager.save_project(new_project)
+
+        # Cache timestamp should be zeroed out
+        assert project_manager._cache_timestamp == 0.0
+
+    def test_project_list_cache_invalidated_on_delete(self, project_manager, sample_project):
+        """Test that deleting a project invalidates the cache."""
+        import time
+        project_manager.save_project(sample_project)
+        project_manager.list_all_projects()
+        project_manager._cache_timestamp = time.time()
+
+        project_manager.delete_project(sample_project.project_id)
+
+        assert project_manager._cache_timestamp == 0.0
+
+
 class TestProjectManagerIntegration:
     """Integration tests for ProjectManager."""
 

@@ -4,6 +4,7 @@ Service layer for project management business logic.
 
 import os
 import json
+import time
 from typing import Dict, Optional, List
 from models.project import Project
 from repositories.project_repository import ProjectRepository
@@ -52,6 +53,8 @@ class ProjectManager:
     Uses Dependency Inversion Principle by depending on ProjectRepository abstraction.
     """
 
+    _CACHE_TTL: float = 60.0
+
     def __init__(self, repository: ProjectRepository) -> None:
         """
         Initialize the project manager with a repository.
@@ -60,7 +63,13 @@ class ProjectManager:
             repository: Repository implementation for project persistence.
         """
         self.repository = repository
+        self._project_list_cache: Dict[str, str] = {}
+        self._cache_timestamp: float = 0.0
         logger.info(f"ProjectManager initialized with {repository.__class__.__name__}")
+
+    def _invalidate_project_cache(self) -> None:
+        """Invalidate the project list cache to force a refresh on next access."""
+        self._cache_timestamp = 0.0
 
     def create_new_project(
         self,
@@ -108,6 +117,7 @@ class ProjectManager:
         project.update_completion_rate()
 
         result = self.repository.save(project)
+        self._invalidate_project_cache()
         logger.debug(f"Project save result: {result}")
 
         return result
@@ -150,20 +160,26 @@ class ProjectManager:
         """
         logger.info(f"Deleting project: {project_id}")
         result = self.repository.delete(project_id)
+        self._invalidate_project_cache()
         logger.debug(f"Project delete result: {result}")
         return result
 
     def list_all_projects(self) -> Dict[str, str]:
         """
-        List all available projects.
+        List all available projects. Results are cached for _CACHE_TTL seconds.
 
         Returns:
             Dictionary mapping project IDs to project names
         """
-        logger.debug("Listing all projects")
-        projects = self.repository.list_all()
-        logger.info(f"Found {len(projects)} projects")
-        return projects
+        now = time.time()
+        if now - self._cache_timestamp > self._CACHE_TTL:
+            logger.debug("Project list cache miss — refreshing from repository")
+            self._project_list_cache = self.repository.list_all()
+            self._cache_timestamp = now
+            logger.info(f"Found {len(self._project_list_cache)} projects")
+        else:
+            logger.debug("Serving project list from cache")
+        return self._project_list_cache
 
     def project_exists(self, project_id: str) -> bool:
         """
